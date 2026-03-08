@@ -1,16 +1,17 @@
 FROM php:8.2-apache
 
-COPY . /var/www/html/
+WORKDIR /var/www/html
+
+COPY . /var/www/html
 
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 RUN a2enmod rewrite
 
-# Railway dynamic port support
-ENV APACHE_RUN_PORT=8080
+# Railway uses dynamic PORT
 ENV PORT=8080
 
-RUN sed -i 's/80/8080/g' /etc/apache2/ports.conf
-RUN sed -i 's/:80/:8080/g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf
+RUN sed -i 's/:80/:${PORT}/g' /etc/apache2/sites-available/000-default.conf
 
 EXPOSE 8080
 
