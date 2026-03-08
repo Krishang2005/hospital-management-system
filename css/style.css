@@ -1,0 +1,248 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+}
+
+/* Hero Banner */
+.hero-banner {
+    background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+    color: white;
+    padding: 80px 0;
+    border-bottom-left-radius: 50px;
+    border-bottom-right-radius: 50px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(13, 110, 253, 0.2);
+}
+
+.hero-title {
+    font-weight: 700;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    font-weight: 300;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+/* Category Cards */
+.category-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    background: white;
+    text-align: center;
+    padding: 30px 20px;
+}
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    color: #0d6efd;
+}
+.category-icon {
+    font-size: 3rem;
+    color: #0d6efd;
+    margin-bottom: 15px;
+}
+
+.category-image-wrapper {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f0f7ff;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.category-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.category-card:hover .category-image-wrapper {
+    background: #e1f0ff;
+}
+
+.category-card:hover .category-image {
+    transform: scale(1.15) rotate(2deg);
+}
+
+/* Doctor Cards */
+.doctor-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    height: 100%;
+}
+.doctor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+.doctor-photo {
+    height: 250px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.doctor-avatar {
+    height: 250px;
+    width: 100%;
+    background-color: #17a2b8; /* Teal base for initials */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: -2px;
+}
+
+.doctor-avatar-sm {
+    width: 45px;
+    height: 45px;
+    background-color: #17a2b8;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-radius: 50%;
+}
+
+/* Badges */
+.badge-available {
+    background-color: #198754;
+}
+.badge-busy {
+    background-color: #dc3545;
+}
+
+/* Slots */
+.time-slot {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.time-slot.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #e9ecef !important;
+    border-color: #dee2e6 !important;
+    color: #6c757d !important;
+}
+
+/* Admin Chart Canvas */
+#dashboardChart {
+    max-height: 400px;
+}
+
+/* --- Animations --- */
+
+/* Entry Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Staggered load for cards */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Pulse for alerts/important items */
+@keyframes pulseRed {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+.pulse-red {
+    animation: pulseRed 2s infinite;
+}
+
+/* Hover Shine Effect for buttons */
+.btn-shine {
+    position: relative;
+    overflow: hidden;
+}
+.btn-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: rgba(255,255,255,0.2);
+    transform: rotate(45deg);
+    transition: all 0.5s;
+    opacity: 0;
+}
+.btn-shine:hover::after {
+    left: 100%;
+    top: 100%;
+    opacity: 1;
+}
+
+/* Card Hover Elevation */
+.card-elevate {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.card-elevate:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important;
+}

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Doctors - KCG Multispecialist Hospital</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html"><i class="fa-solid fa-hospital me-2"></i>KCG Multispecialist Hospital</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="doctors.html">Doctors</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto" id="nav-right">
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="main-content container py-5">
+    <h2 class="fw-bold mb-4 text-center">Find a Doctor</h2>
+
+    <!-- Search & Filter Form -->
+    <div class="card shadow-sm border-0 rounded-4 mb-5">
+        <div class="card-body p-4">
+            <form id="searchForm" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" id="searchKeyword" class="form-control form-control-lg" placeholder="Search doctor or hospital name...">
+                </div>
+                <div class="col-md-4">
+                    <select id="specializationFilter" class="form-select form-select-lg">
+                        <option value="">All Specializations</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-lg w-100"><i class="fa-solid fa-search me-2"></i> Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Doctor Listings -->
+    <div class="row g-4" id="doctors-container">
+        <div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container text-center text-md-start">
+        <div class="text-center mb-0">
+            &copy; <span id="year"></span> KCG Multispecialist Hospital. All Rights Reserved.
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/app.js?v=3"></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    AppAuth.updateNavbar();
+
+    async function loadSpecializations() {
+        const specFilter = document.getElementById('specializationFilter');
+        const res = await App.getSpecializations();
+        
+        // Setup initial pre-selection if passed via URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const preSelected = urlParams.get('specialization') || '';
+
+        if(res.status === 'success') {
+            res.data.forEach(s => {
+                const isSelected = preSelected === s.specialization_name ? 'selected' : '';
+                specFilter.insertAdjacentHTML('beforeend', `<option value="${s.specialization_name}" ${isSelected}>${s.specialization_name}</option>`);
+            });
+        }
+    }
+
+    async function renderDoctorsList(search = '', specialization = '') {
+        const container = document.getElementById('doctors-container');
+        container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>';
+        
+        const res = await App.getDoctors(0, search, specialization);
+        if(res.status === 'success' && res.data.length > 0) {
+            let html = '';
+            res.data.forEach(doc => {
+                const badgeClass = doc.status === 'Available' ? 'badge-available' : 'badge-busy';
+                const actionBtn = doc.status === 'Available' 
+                    ? `<a href="doctor_profile.html?id=${doc.id}" class="btn btn-outline-primary w-100 rounded-pill">View Profile</a>`
+                    : `<button class="btn btn-secondary w-100 rounded-pill" disabled>Fully Booked Today</button>`;
+
+                const initials = App.getDoctorInitials(doc.doctor_name);
+                const photoHtml = (doc.photo && !doc.photo.includes('default')) 
+                    ? `<img src="images/${doc.photo}?v=${Date.now()}" class="card-img-top doctor-photo" alt="Doctor Photo" onerror="this.outerHTML='<div class=\'doctor-avatar\'>${initials}</div>';">`
+                    : `<div class="doctor-avatar">${initials}</div>`;
+
+                html += `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card doctor-card h-100">
+                        ${photoHtml}
+                        <div class="card-body text-center d-flex flex-column">
+                            <h5 class="card-title fw-bold text-primary mb-1">Dr. ${doc.doctor_name}</h5>
+                            <p class="card-text text-muted mb-2">${doc.specialization}</p>
+                            <h6 class="text-secondary small fw-bold mb-2">${doc.qualification}</h6>
+                            <div class="mb-3">
+                                <span class="badge ${badgeClass} rounded-pill px-3 py-2">${doc.status === 'Available' ? 'Available' : 'Unavailable'}</span>
+                            </div>
+                            <p class="small mb-3"><strong>${doc.experience} Yrs Exp.</strong><br>${doc.hospital}</p>
+                            <div class="mt-auto">${actionBtn}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="col-12 text-center py-5"><h4 class="text-muted">No doctors found matching your criteria.</h4></div>';
+        }
+    }
+
+    // Initialize Page
+    (async function init() {
+        await loadSpecializations();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const search = urlParams.get('search') || '';
+        const spec = urlParams.get('specialization') || '';
+        
+        document.getElementById('searchKeyword').value = search;
+        await renderDoctorsList(search, spec);
+    })();
+
+    // Search Form Submit Hook
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const search = document.getElementById('searchKeyword').value;
+        const spec = document.getElementById('specializationFilter').value;
+        
+        // Update URL bounds without reload
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?search=${encodeURIComponent(search)}&specialization=${encodeURIComponent(spec)}`;
+        window.history.pushState({path:newUrl},'',newUrl);
+
+        renderDoctorsList(search, spec);
+    });
+
+</script>
+</body>
+</html>

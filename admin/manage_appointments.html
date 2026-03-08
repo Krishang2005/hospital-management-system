@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments - KCG Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-light">
+
+<div aria-live="polite" aria-atomic="true">
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container" style="z-index:1055;"></div>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" id="admin-nav"></nav>
+
+<div class="container py-5 main-content" id="admin-content" style="display:none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0"><i class="fa-solid fa-calendar-check me-2 text-primary"></i>Patient Appointment Requests</h2>
+        <button class="btn btn-outline-primary rounded-pill" onclick="loadAppointments()">
+            <i class="fa-solid fa-rotate me-1"></i>Refresh
+        </button>
+    </div>
+
+    <!-- Filter tabs -->
+    <ul class="nav nav-pills mb-4" id="filterTabs">
+        <li class="nav-item"><button class="nav-link active" onclick="filterAppts('all', this)">All</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="filterAppts('Pending', this)">⏳ Pending</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="filterAppts('Confirmed', this)">✅ Confirmed</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="filterAppts('Ongoing', this)">⚙️ Ongoing</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="filterAppts('Completed', this)">🏁 Completed</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="filterAppts('No-Show', this)">🏃 No-Show</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="filterAppts('Cancelled', this)">❌ Cancelled</button></li>
+    </ul>
+
+    <div id="appts-container">
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title fw-bold" id="emailModalLabel"><i class="fa-solid fa-envelope me-2"></i>Send Emergency Email</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="emailForm">
+                    <input type="hidden" id="notifUserId">
+                    <input type="hidden" id="emailRecipient">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">To:</label>
+                        <input type="text" class="form-control bg-light" id="displayRecipient" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Subject:</label>
+                        <input type="text" class="form-control" id="emailSubject" value="Emergency Notification: Appointment Update">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Message:</label>
+                        <textarea class="form-control" id="emailMessage" rows="6" placeholder="Type your message here..."></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary rounded-pill py-2 fw-bold" onclick="sendEmergencyEmail()">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Send Email & Notification
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-dark text-white py-3 mt-5 text-center">
+    <div class="container small">&copy; <span id="year"></span> KCG Multispecialist Hospital Admin Portal.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/auth.js?v=4"></script>
+<script src="../js/admin.js"></script>
+<script src="../js/script.js?v=4"></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    let allAppointments = [];
+    let currentFilter = 'all';
+
+    async function changeStatus(id, newStatus) {
+        try {
+            const res = await fetch(_BASE_URL + 'api/admin/manage_appointments.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appointment_id: id, status: newStatus })
+            });
+            const result = await res.json();
+            if (result.status === 'success') {
+                showToast('Success', result.message);
+                loadAppointments();
+            } else {
+                showToast('Error', result.message, 'error');
+            }
+        } catch(e) {
+            showToast('Error', 'Network error', 'error');
+        }
+    }
+
+    async function deleteAppointment(id) {
+        if (!confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) return;
+        try {
+            const res = await fetch(_BASE_URL + 'api/admin/manage_appointments.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appointment_id: id })
+            });
+            const result = await res.json();
+            if (result.status === 'success') {
+                showToast('Deleted', result.message);
+                loadAppointments();
+            } else {
+                showToast('Error', result.message, 'error');
+            }
+        } catch(e) {
+            showToast('Error', 'Network error', 'error');
+        }
+    }
+
+    function filterAppts(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('#filterTabs .nav-link').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        renderAppointments();
+    }
+
+    function renderAppointments() {
+        const container = document.getElementById('appts-container');
+        const filtered = currentFilter === 'all' ? allAppointments : allAppointments.filter(a => a.status === currentFilter);
+
+        if (filtered.length === 0) {
+            container.innerHTML = `<div class="text-center py-5 text-muted"><i class="fa-solid fa-calendar-xmark fa-3x mb-3 d-block"></i>No appointments found.</div>`;
+            return;
+        }
+
+        let html = '<div class="row g-3">';
+        filtered.forEach(a => {
+            const date = new Date(a.appointment_date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+
+            let badgeClass = 'bg-secondary';
+            let badgeIcon = '';
+            if (a.status === 'Pending')   { badgeClass = 'bg-warning text-dark'; badgeIcon = '⏳'; }
+            if (a.status === 'Confirmed') { badgeClass = 'bg-success';           badgeIcon = '✅'; }
+            if (a.status === 'Ongoing')   { badgeClass = 'bg-primary';           badgeIcon = '⚙️'; }
+            if (a.status === 'Completed') { badgeClass = 'bg-info';              badgeIcon = '🏁'; }
+            if (a.status === 'No-Show')   { badgeClass = 'bg-dark';              badgeIcon = '🏃'; }
+            if (a.status === 'Cancelled') { badgeClass = 'bg-danger';            badgeIcon = '❌'; }
+
+            const actionButtons = a.status === 'Pending' ? `
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-success flex-fill rounded-pill fw-semibold" onclick="changeStatus(${a.id},'Confirmed')">
+                        <i class="fa-solid fa-check me-1"></i>Accept
+                    </button>
+                    <button class="btn btn-danger flex-fill rounded-pill fw-semibold" onclick="changeStatus(${a.id},'Cancelled')">
+                        <i class="fa-solid fa-xmark me-1"></i>Reject
+                    </button>
+                </div>` : a.status === 'Confirmed' ? `
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-primary flex-fill rounded-pill fw-semibold btn-sm" onclick="changeStatus(${a.id},'Ongoing')">
+                        <i class="fa-solid fa-spinner me-1"></i>Start Treatment
+                    </button>
+                    <button class="btn btn-info flex-fill rounded-pill fw-semibold text-white btn-sm" onclick="changeStatus(${a.id},'Completed')">
+                        <i class="fa-solid fa-flag-checkered me-1"></i>Mark Complete
+                    </button>
+                    <button class="btn btn-dark flex-fill rounded-pill fw-semibold btn-sm" onclick="changeStatus(${a.id},'No-Show')">
+                        <i class="fa-solid fa-person-running me-1"></i>No-Show
+                    </button>
+                    <button class="btn btn-outline-danger flex-fill rounded-pill btn-sm" onclick="changeStatus(${a.id},'Cancelled')">
+                        Cancel
+                    </button>
+                </div>` : a.status === 'Ongoing' ? `
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-info flex-fill rounded-pill fw-semibold text-white" onclick="changeStatus(${a.id},'Completed')">
+                        <i class="fa-solid fa-flag-checkered me-1"></i>Mark Complete
+                    </button>
+                    <button class="btn btn-outline-danger flex-fill rounded-pill" onclick="changeStatus(${a.id},'Cancelled')">
+                        Cancel
+                    </button>
+                </div>` : '';
+
+            html += `
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex gap-2">
+                                <span class="badge ${badgeClass} rounded-pill px-3 py-2">${badgeIcon} ${a.status}</span>
+                                <button class="btn btn-link text-primary p-0 ms-2" onclick="openEmailModal(${a.user_id}, '${a.patient_email}', '${a.patient_name}', '${a.doctor_name}')" title="Send Email & Notification">
+                                    <i class="fa-solid fa-envelope"></i>
+                                </button>
+                                <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteAppointment(${a.id})" title="Delete Appointment">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">#${a.id}</small>
+                        </div>
+                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-user text-primary me-2"></i>${a.patient_name}</h6>
+                        <p class="small text-muted mb-2"><i class="fa-solid fa-phone me-1"></i>${a.patient_phone}</p>
+                        <hr class="my-2">
+                        <h6 class="fw-semibold mb-1"><i class="fa-solid fa-stethoscope text-success me-2"></i>Dr. ${a.doctor_name}</h6>
+                        <p class="small text-muted mb-2">${a.specialization}</p>
+                        <p class="small mb-0"><i class="fa-solid fa-calendar me-1 text-warning"></i><strong>${date}</strong> &nbsp; <i class="fa-solid fa-clock me-1"></i>${a.appointment_time}</p>
+                        ${actionButtons}
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    async function loadAppointments() {
+        document.getElementById('appts-container').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+        const res = await fetch(_BASE_URL + 'api/admin/manage_appointments.php');
+        const result = await res.json();
+        if (result.status === 'success') {
+            allAppointments = result.data;
+            renderAppointments();
+        } else {
+            document.getElementById('appts-container').innerHTML = '<div class="text-center text-danger py-5">Failed to load appointments</div>';
+        }
+    }
+
+    function openEmailModal(userId, email, patientName, doctorName) {
+        document.getElementById('notifUserId').value = userId;
+        document.getElementById('emailRecipient').value = email;
+        document.getElementById('displayRecipient').value = `${patientName} (${email})`;
+        document.getElementById('emailMessage').value = `Dear ${patientName},\n\nWe regret to inform you that Dr. ${doctorName} is unavailable today due to an unexpected emergency. Your appointment scheduled for today will need to be rescheduled.\n\nPlease contact the hospital desk or log in to choose another slot.\n\nWe apologize for the inconvenience.\n\nRegards,\nKCG Multispecialist Hospital`;
+        
+        const modal = new bootstrap.Modal(document.getElementById('emailModal'));
+        modal.show();
+    }
+
+    async function sendEmergencyEmail() {
+        const userId = document.getElementById('notifUserId').value;
+        const email = document.getElementById('emailRecipient').value;
+        const subject = document.getElementById('emailSubject').value;
+        const message = document.getElementById('emailMessage').value;
+
+        if (!message.trim()) {
+            showToast('Error', 'Message cannot be empty', 'error');
+            return;
+        }
+
+        try {
+            const btn = document.querySelector('#emailModal .btn-primary');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+            btn.disabled = true;
+
+            const res = await fetch(_BASE_URL + 'api/admin/send_appointment_email.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, email, subject, message })
+            });
+            const result = await res.json();
+            
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+
+            if (result.status === 'success') {
+                showToast('Email Sent', result.message);
+                bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+            } else {
+                showToast('Error', result.message, 'error');
+            }
+        } catch(e) {
+            showToast('Error', 'Network error', 'error');
+        }
+    }
+
+    async function init() {
+        const session = await AppAuth.requireLogin(true);
+        if (!session) return;
+        AdminApp.renderAdminNavbar();
+        document.getElementById('admin-content').style.display = 'block';
+        loadAppointments();
+    }
+
+    init();
+</script>
+</body>
+</html>

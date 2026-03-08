@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KCG Multispecialist Hospital - Modern Appointment System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html"><i class="fa-solid fa-hospital me-2"></i>KCG Multispecialist Hospital</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="doctors.html">Doctors</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto align-items-center" id="nav-right">
+        <!-- Default buttons shown before JS loads session -->
+        <li class="nav-item">
+          <a class="btn btn-outline-light me-2 rounded-pill px-3" href="login.html">
+            <i class="fa-solid fa-user me-1"></i>Patient Login
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-light text-primary fw-semibold rounded-pill px-3" href="admin/admin_login.html">
+            <i class="fa-solid fa-user-shield me-1"></i>Admin Login
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<div class="main-content">
+    <!-- Hero Section -->
+    <section class="hero-banner text-center">
+        <div class="container">
+            <h1 class="hero-title animate-slide-up">Your Health, Our Priority</h1>
+            <p class="hero-subtitle animate-fade-in stagger-2">Book appointments with top-rated doctors effortlessly</p>
+            <a href="doctors.html" class="btn btn-light btn-lg text-primary fw-bold shadow-sm rounded-pill px-5 py-3 animate-scale-in stagger-3 btn-shine">Book an Appointment</a>
+        </div>
+    </section>
+
+    <!-- Departments Component -->
+    <section class="container mb-5">
+        <h2 class="text-center fw-bold mb-4">Our Departments</h2>
+        <div class="row g-4 text-center justify-content-center" id="departments-container">
+            <!-- Dynamically populated by app.js -->
+        </div>
+    </section>
+
+    <!-- Top Doctors Component -->
+    <section class="bg-white py-5 mb-5 shadow-sm rounded-4 container">
+        <h2 class="text-center fw-bold mb-4">Top Doctors</h2>
+        <div class="row g-4 px-4 justify-content-center" id="top-doctors-container">
+            <!-- Dynamically populated by app.js -->
+        </div>
+        <div class="text-center mt-4">
+            <a href="doctors.html" class="btn btn-primary rounded-pill px-4">View All Doctors</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="container mb-5">
+        <div class="row align-items-center bg-white p-5 rounded-4 shadow-sm">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <h2 class="fw-bold text-primary mb-3">About KCG Multispecialist Hospital</h2>
+                <p class="text-muted" style="line-height: 1.8;">KCG Multispecialist Hospital is dedicated to providing state-of-the-art medical services with compassion and excellence. We bring together a highly skilled team of specialists, modern technology, and a patient-centric approach to ensure that you and your loved ones receive the best possible care.</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Experienced & Best Doctors</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Modern Technology & Facilities</li>
+                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 24/7 Emergency Support</li>
+                </ul>
+            </div>
+            <div class="col-md-6 text-center">
+                <img src="images/hospital_building.png" class="img-fluid rounded-4 shadow" alt="Hospital Building">
+            </div>
+        </div>
+    </section>
+
+    <!-- Doctors Group Section -->
+    <section class="container mb-5">
+        <div class="card border-0 rounded-4 shadow-sm overflow-hidden">
+            <div class="row g-0 align-items-center">
+                <div class="col-lg-7">
+                    <img src="images/group photo.png" class="img-fluid w-100 h-100 object-fit-cover" alt="Our Medical Team">
+                </div>
+                <div class="col-lg-5">
+                    <div class="p-5">
+                        <h2 class="fw-bold text-primary mb-3">Our Highly Qualified Doctors</h2>
+                        <p class="lead mb-4">Meet the heart of our hospital—our world-class medical team.</p>
+                        <p class="text-muted mb-4" style="line-height: 1.8;">
+                            At KCG Multispecialist Hospital, we take pride in our team of highly qualified and board-certified doctors who bring decades of combined experience from top medical institutions. Each specialist works with unwavering dedication and expertise to provide precise diagnoses and advanced treatments, ensuring you receive world-class healthcare right here.
+                        </p>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-primary-subtle text-primary rounded-circle p-2 me-3">
+                                <i class="fa-solid fa-user-doctor"></i>
+                            </div>
+                            <span class="fw-semibold">12+ Top Specialists</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary-subtle text-primary rounded-circle p-2 me-3">
+                                <i class="fa-solid fa-award"></i>
+                            </div>
+                            <span class="fw-semibold">Award-Winning Medical Team</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container text-center text-md-start">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h5 class="fw-bold"><i class="fa-solid fa-hospital me-2"></i>KCG Multispecialist Hospital</h5>
+                <p>Providing world-class healthcare services. Book your appointment today with top doctors.</p>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5 class="fw-bold">Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="index.html" class="text-white text-decoration-none">Home</a></li>
+                    <li><a href="doctors.html" class="text-white text-decoration-none">Find Doctors</a></li>
+                    <li><a href="login.html" class="text-white text-decoration-none">Login</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5 class="fw-bold">Contact Us</h5>
+                <p><i class="fa-solid fa-phone me-2"></i>+1 234 567 8900</p>
+                <p><i class="fa-solid fa-envelope me-2"></i>info@kcghospital.in</p>
+            </div>
+        </div>
+        <hr class="text-light">
+        <div class="text-center mb-0">
+            &copy; <span id="year"></span> KCG Multispecialist Hospital. All Rights Reserved.
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/app.js?v=2"></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    // Validate session and populate Navigation
+    AppAuth.updateNavbar();
+    
+    // Load Homepage specific dynamic content
+    App.renderDepartments('departments-container');
+    App.renderTopDoctors('top-doctors-container');
+</script>
+</body>
+</html>

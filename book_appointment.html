@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment - KCG Multispecialist Hospital</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html"><i class="fa-solid fa-hospital me-2"></i>KCG Multispecialist Hospital</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="doctors.html">Doctors</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto" id="nav-right"></ul>
+    </div>
+  </div>
+</nav>
+
+<div class="main-content container py-5" id="booking-wrapper" style="display:none;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <div class="d-flex align-items-center border-bottom pb-4 mb-4" id="doc-header">
+                    <!-- Populated by JS -->
+                </div>
+
+                <h4 class="mb-4">Book Your Appointment</h4>
+
+                <form id="dateForm" class="mb-4 d-flex align-items-end">
+                    <div class="me-3 flex-grow-1">
+                        <label class="form-label text-muted">Select Date</label>
+                        <input type="date" id="selectedDate" class="form-control form-control-lg" required>
+                    </div>
+                </form>
+
+                <form id="bookingForm">
+                    <div class="mb-4">
+                        <label class="form-label text-muted d-block mb-3">Select Time Slot</label>
+                        <div class="row g-3" id="slots-container">
+                            <div class="spinner-border text-primary"></div>
+                        </div>
+                    </div>
+                    <div id="booking-action">
+                        <!-- Populated by JS -->
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container text-center text-md-start">
+        <div class="text-center mb-0">&copy; <span id="year"></span> KCG Multispecialist Hospital. All Rights Reserved.</div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/script.js"></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    
+    let currentDoctorId = null;
+
+    async function fetchDocAndSlots(date) {
+        const slotsCont = document.getElementById('slots-container');
+        slotsCont.innerHTML = '<div class="spinner-border text-primary"></div>';
+        
+        const res = await fetch(`api/public/get_doctor_details.php?id=${currentDoctorId}&date=${date}`);
+        const result = await res.json();
+        
+        if(result.status !== 'success') {
+            window.location.href = 'doctors.html';
+            return;
+        }
+
+        const doc = result.data;
+        
+        // Render Header
+        document.getElementById('doc-header').innerHTML = `
+            <img src="images/${doc.photo}" class="rounded-circle me-4 shadow-sm" style="width: 100px; height: 100px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/100?text=Doc';">
+            <div>
+                <h3 class="fw-bold text-primary mb-1">Dr. ${doc.doctor_name}</h3>
+                <p class="text-muted mb-0">${doc.specialization} | ${doc.hospital}</p>
+            </div>
+        `;
+
+        // Render Slots
+        const allSlots = doc.available_time.split(',').map(s => s.trim()).filter(s => s);
+        let slotsHtml = '';
+        
+        if (allSlots.length === 0) {
+            slotsHtml = '<div class="col-12"><div class="alert alert-warning">No slots defined for this doctor.</div></div>';
+        } else {
+            allSlots.forEach((slot, i) => {
+                const isBooked = doc.booked_slots.includes(slot);
+                const disabledAttr = isBooked ? 'disabled' : '';
+                const disabledClass = isBooked ? 'disabled' : '';
+                
+                slotsHtml += `
+                <div class="col-md-3 col-6">
+                    <input type="radio" class="btn-check time-slot-radio" name="time" id="slot-${i}" value="${slot}" ${disabledAttr} required>
+                    <label class="btn btn-outline-primary w-100 time-slot py-2 ${disabledClass}" for="slot-${i}">
+                        ${slot}
+                    </label>
+                </div>`;
+            });
+        }
+        slotsCont.innerHTML = slotsHtml;
+
+        // Render Action Button
+        const actionCont = document.getElementById('booking-action');
+        if (doc.status === 'Available') {
+            actionCont.innerHTML = '<button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill mt-3 shadow" id="confirmBtn">Confirm Booking</button>';
+        } else {
+            actionCont.innerHTML = '<div class="alert alert-danger text-center">Doctor is not available at the moment.</div>';
+        }
+        
+        document.getElementById('booking-wrapper').style.display = 'block';
+    }
+
+    async function init() {
+        if(!(await AppAuth.requireLogin())) return;
+        AppAuth.updateNavbar();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        currentDoctorId = urlParams.get('doctor_id');
+
+        if (!currentDoctorId) { window.location.href = 'doctors.html'; return; }
+
+        const dateInput = document.getElementById('selectedDate');
+        // Set min date to today
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+        
+        // Select tomorrow by default if not passed
+        const passedDate = urlParams.get('date');
+        if(passedDate) {
+            dateInput.value = passedDate;
+        } else {
+            const tmrw = new Date();
+            tmrw.setDate(tmrw.getDate() + 1);
+            dateInput.value = tmrw.toISOString().split('T')[0];
+        }
+
+        // Fetch Initial
+        await fetchDocAndSlots(dateInput.value);
+
+        // Date Change Event
+        dateInput.addEventListener('change', (e) => {
+            fetchDocAndSlots(e.target.value);
+            // Updating URL without refresh
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?doctor_id=${currentDoctorId}&date=${e.target.value}`;
+            window.history.pushState({path:newUrl},'',newUrl);
+        });
+
+        // Form Submit
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('confirmBtn');
+            if(btn) { btn.disabled = true; btn.innerHTML = 'Booking...'; }
+
+            const timeEl = document.querySelector('input[name="time"]:checked');
+            if(!timeEl) return;
+
+            const time = timeEl.value;
+            const date = document.getElementById('selectedDate').value;
+
+            try {
+                const res = await fetch('api/patient/book_appointment.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doctor_id: currentDoctorId, date, time })
+                });
+                const result = await res.json();
+
+                if (result.status === 'success') {
+                    showToast('Success', `Appointment booked successfully!<br>Doctor: Dr. ${result.data.doctor_name}<br>Date: ${result.data.date}<br>Time: ${result.data.time}`);
+                    setTimeout(() => window.location.href = 'my_appointments.html', 3000);
+                } else {
+                    showToast('Error', result.message, 'error');
+                    if(btn) { btn.disabled = false; btn.innerHTML = 'Confirm Booking'; }
+                    // Reload slots
+                    fetchDocAndSlots(date);
+                }
+            } catch (err) {
+                showToast('Error', 'Network error', 'error');
+                if(btn) { btn.disabled = false; btn.innerHTML = 'Confirm Booking'; }
+            }
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>

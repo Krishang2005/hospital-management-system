@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - KCG Multispecialist Hospital</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" id="admin-nav">
+  <!-- Populated by admin.js -->
+</nav>
+
+<div class="container py-5 main-content animate-fade-in" id="admin-content" style="display:none;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">Dashboard Overview</h2>
+        <span class="text-muted" id="currentDate"></span>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4 animate-slide-up stagger-1">
+            <div class="card shadow-sm border-0 rounded-4 card-elevate">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
+                        <i class="fa-solid fa-users fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted fw-semibold mb-1">Total Patients</h6>
+                        <h2 class="fw-bold mb-0" id="stat-patients">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 animate-slide-up stagger-2">
+            <div class="card shadow-sm border-0 rounded-4 card-elevate">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3 text-success">
+                        <i class="fa-solid fa-user-doctor fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted fw-semibold mb-1">Total Doctors</h6>
+                        <h2 class="fw-bold mb-0" id="stat-doctors">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 animate-slide-up stagger-3">
+            <div class="card shadow-sm border-0 rounded-4 card-elevate">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3 text-warning">
+                        <i class="fa-solid fa-calendar-check fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted fw-semibold mb-1">Total Appointments</h6>
+                        <h2 class="fw-bold mb-0" id="stat-appointments">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 animate-slide-up stagger-4">
+            <div class="card shadow-sm border-0 rounded-4 card-elevate">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Appointments Overview (Last 7 Days)</h5>
+                    <div style="height: 350px;">
+                        <canvas id="appointmentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-dark text-white py-3 mt-auto text-center">
+    <div class="container small">
+        &copy; <span id="year"></span> KCG Multispecialist Hospital Admin Portal.
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/auth.js?v=4"></script>
+<script src="../js/admin.js"></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    async function initAdmin() {
+        const session = await AppAuth.requireLogin(true); // Must be admin
+        if(!session) return;
+        
+        AdminApp.renderAdminNavbar();
+        document.getElementById('admin-content').style.display = 'block';
+
+        const data = await AdminApp.getDashboardStats();
+        if(data.status === 'success') {
+            document.getElementById('stat-patients').textContent = data.data.total_patients;
+            document.getElementById('stat-doctors').textContent = data.data.total_doctors;
+            document.getElementById('stat-appointments').textContent = data.data.total_appointments;
+            
+            AdminApp.initChart(data.data.chart.labels, data.data.chart.data);
+        }
+    }
+
+    initAdmin();
+</script>
+</body>
+</html>
